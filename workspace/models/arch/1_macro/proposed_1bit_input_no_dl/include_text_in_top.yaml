@@ -1,0 +1,4 @@
+globals_ohas:
+  version: 0.4
+  environment_variables:
+    ACCELERGY_COMPONENT_LIBRARIES_LIGHT_HPNA: "{{find_path('light_hpna_components')}}"

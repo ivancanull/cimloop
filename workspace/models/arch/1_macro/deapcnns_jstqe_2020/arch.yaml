@@ -1,0 +1,110 @@
+{{include_text('defines.yaml')}}
+
+architecture:
+  nodes: &macro # TOP MACRO
+  # ===========================================================================
+  - !Container # Macro top-level
+    name: macro
+    <<<: [*container_defaults]
+    attributes:
+      technology: TECHNOLOGY
+
+  - !Component # Weight cache stores weights
+    name: weight_cache
+    <<<: [*component_defaults, *keep_weights]
+    subclass: sram
+    attributes:
+      depth: WEIGHT_BITS_PER_SLICE 
+      width: N_ROWS * N_COLUMNS   # To ensure that we can run weight-stationary
+    constraints: 
+      temporal: 
+        factors_only: [M=-1]
+        factors: []
+        no_iteration_over_dataspaces: !nomerge [] # Overwrite default
+
+  - !Component # Put laser down here -> power is proportional to the number of endpoints
+    name: laser
+    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+    subclass: laser
+    attributes:
+      depth: INPUT_BITS_PER_SLICE
+      width: N_COLUMNS # One laser per wavelength
+      n_instances: N_COLUMNS
+      
+  - !Component # DAC supplies analog weight values
+    name: input_dac
+    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+    subclass: dac_cache
+    attributes:
+      depth: INPUT_BITS_PER_SLICE
+      width: N_COLUMNS # One laser per wavelength
+      n_instances: N_COLUMNS
+
+  - !Component
+    name: input_mrr
+    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+    subclass: tomrr
+    attributes: 
+      depth: INPUT_BITS_PER_SLICE
+      width: N_COLUMNS # One laser per wavelength
+      n_instances: N_COLUMNS
+
+  - !ArrayContainer # Each row works on a different column of the filter weights
+    name: row
+    <<<: [*container_defaults, *spatial_must_reuse_inputs]
+    spatial: {meshY: N_ROWS}
+    constraints: {spatial: {maximize_dims: [[Y], [M]]}}
+    max_utilization: {spatial: {factors: [('M=' + str(row.get_fanout()))]}}
+
+  - !Component # ADC
+    name: adc
+    <<<: [*component_defaults, *keep_outputs, *no_coalesce]
+    subclass: adc
+    attributes: {<<<: *cim_component_attributes}
+
+  - !Component # TIA converts analog current to voltage for ADC
+    name: TIA
+    <<<: [*component_defaults, *keep_outputs, *no_coalesce]
+    subclass: tia
+    attributes:
+      depth: ENCODED_OUTPUT_BITS
+      width: N_COLUMNS
+      n_instances: 1
+  
+  - !Component # Photodiode converts output light to analog current
+    name: photodiode_output_readout
+    <<<: [*component_defaults, *keep_outputs, *no_coalesce]
+    subclass: photodiode
+    attributes:
+      depth: ENCODED_OUTPUT_BITS
+      width: N_COLUMNS
+      n_instances: 1
+
+  - !ArrayContainer # Each column stores a different weight slice. Columns share inputs.
+    name: column
+    <<<: [*container_defaults, *spatial_must_reuse_outputs]
+    spatial: {meshX: N_COLUMNS}
+    constraints:
+      spatial:
+        maximize_dims: [[R, S], [C]]
+        # no_iteration_over_dataspaces: [Weights]
+    max_utilization: {spatial: {factors: [('R=' + str(column.get_fanout()))]}}
+
+  - !Component # Weight cache stores weights
+    name: weight_dac
+    <<<: [*component_defaults, *keep_weights]
+    subclass: dac_cache
+    attributes:
+      depth: WEIGHT_BITS_PER_SLICE
+      width: 1 # One laser per wavelength
+      n_instances: 1
+
+  - !Component # A MRR in each row/column crossing grabs one wavelength of input/weight multiplied light to send to an output
+    name: weight_mrr
+    subclass: tomrr
+    <<<: [*component_defaults, *keep_inputs, *keep_weights, *no_temporal_reuse]
+    attributes: 
+      n_instances: 1
+
+  - !Hierarchical           # Virtualize an XxYxZ-bit MAC as multiple MAC units.
+    nodes: *virtualized_mac # Defined in include/defines.yaml.

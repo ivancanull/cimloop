@@ -1,0 +1,384 @@
+ERT:
+    version: '0.4'
+    tables:
+      - name: system_top_level.main_memory[1..1]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 1024.0
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 1024.0
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 1024.0
+      - name: system_top_level.glb[1..1]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.184167
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.184167
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.184167
+      - name: system_top_level.router[1..8]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 1.48328
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+      - name: system_top_level.input_buffer[1..128]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.00113672
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.00113672
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.00113672
+      - name: system_top_level.output_buffer[1..128]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.00113672
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.00113672
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.00113672
+      - name: system_top_level.weight_cache[1..128]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.00123531
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.00123531
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.00123531
+      - name: system_top_level.input_dac[1..1024]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 3.9
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+      - name: system_top_level.input_mrr[1..1024]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.001
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+      - name: system_top_level.shift_add[1..131072]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.000998327
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+      - name: system_top_level.photodiode_output_readout[1..131072]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.04992
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+      - name: system_top_level.weight_dac[1..16777216]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 3.9
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+      - name: system_top_level.microdisk[1..16777216]
+        actions:
+          - name: write
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: read
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: leak
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0009984
+          - name: update
+            arguments:
+                global_cycle_seconds: 7.8e-10
+                action_latency_cycles: 1
+            energy: 0.0
+      - name: system_top_level.inter_shared_router_group_spatial[1..1]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 0
+          - name: write
+            arguments: {}
+            energy: 0
+          - name: leak
+            arguments: {}
+            energy: 0
+          - name: update
+            arguments: {}
+            energy: 0
+      - name: system_top_level.inter_tile_spatial[1..8]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 0
+          - name: write
+            arguments: {}
+            energy: 0
+          - name: leak
+            arguments: {}
+            energy: 0
+          - name: update
+            arguments: {}
+            energy: 0
+      - name: system_top_level.inter_mvm_spatial[1..128]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 0
+          - name: write
+            arguments: {}
+            energy: 0
+          - name: leak
+            arguments: {}
+            energy: 0
+          - name: update
+            arguments: {}
+            energy: 0
+      - name: system_top_level.inter_row_spatial[1..1024]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 0
+          - name: write
+            arguments: {}
+            energy: 0
+          - name: leak
+            arguments: {}
+            energy: 0
+          - name: update
+            arguments: {}
+            energy: 0
+      - name: system_top_level.adc[1..131072]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 1.10896
+          - name: leak
+            arguments: {}
+            energy: 0.0
+          - name: write
+            arguments: {}
+            energy: 0
+          - name: update
+            arguments: {}
+            energy: 0
+      - name: system_top_level.inter_column_spatial[1..131072]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 0
+          - name: write
+            arguments: {}
+            energy: 0
+          - name: leak
+            arguments: {}
+            energy: 0
+          - name: update
+            arguments: {}
+            energy: 0
+      - name: system_top_level.inter_1bit_x_1bit_mac_spatial[1..16777216]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 0
+          - name: write
+            arguments: {}
+            energy: 0
+          - name: leak
+            arguments: {}
+            energy: 0
+          - name: update
+            arguments: {}
+            energy: 0
+      - name: system_top_level.here_to_fix_a_bug[1..134217728]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 0
+          - name: write
+            arguments: {}
+            energy: 0
+          - name: leak
+            arguments: {}
+            energy: 0
+          - name: update
+            arguments: {}
+            energy: 0
+      - name: system_top_level.virtual_bitwise_mac[1..134217728]
+        actions:
+          - name: compute
+            arguments: {}
+            energy: 0

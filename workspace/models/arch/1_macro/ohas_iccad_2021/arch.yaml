@@ -1,0 +1,157 @@
+{{include_text('defines.yaml')}}
+
+architecture:
+  # ======================= Top level is !Hierarchical =======================
+  nodes:
+  - !Container # Tile top-level
+    name: tile
+    <<<: [*container_defaults]
+    attributes:
+      has_power_gating: True
+      technology: TECHNOLOGY
+
+  - !Component # Input buffer
+    name: input_buffer
+    <<<: [*component_defaults]
+    subclass: smartbuffer_sram
+    attributes:
+      n_macros: N_TILES
+      width: n_macros * ENCODED_INPUT_BITS
+      depth: ARRAY_PARALLEL_INPUTS * ENCODED_INPUT_BITS * n_macros // width
+      multiple_buffering: 1 / CIM_UNIT_DEPTH_CELLS
+    constraints: {dataspace: {keep_only: [Inputs]}, temporal: {factors_only: []}}
+    enabled: True
+
+  - !Component # Output buffer
+    name: output_buffer
+    <<<: [*component_defaults]
+    subclass: smartbuffer_sram
+    attributes:
+      n_macros: N_TILES
+      width: n_macros * ENCODED_OUTPUT_BITS
+      depth: ARRAY_PARALLEL_OUTPUTS * ENCODED_OUTPUT_BITS * n_macros // width
+      multiple_buffering: 1 / CIM_UNIT_DEPTH_CELLS
+    constraints: {dataspace: {keep_only: [Outputs]}, temporal: {factors_only: []}}
+    enabled: True
+
+  - !Container # Macro
+    name: macro_in_tile # long name so it doesn't conflict with other names
+    <<<: [*container_defaults, *spatial_map_all_weights]
+    attributes: {has_power_gating: True}
+    spatial: {meshX: N_TILES}
+
+  # - !Component # Global buffer stores inputs operands
+  #   name: global_buffer
+  #   <<<: [*component_defaults]
+  #   subclass: ohas_sram
+  #   attributes:
+  #     depth: round(32768 * GLB_DEPTH_SCALE)
+  #     width: 128
+  #     n_banks: 32
+  #     datawidth: 1
+  #   constraints: 
+  #     dataspace: {keep_only: [Inputs, Outputs]}
+  #     temporal: 
+  #       factors_only: [M=-1, C=-1, P=-1, Q=-1, N=-1, R=-1, S=-1]
+  #       factors: []
+  #       no_iteration_over_dataspaces: !nomerge [] # Overwrite default
+  #       permutation: [N, P, Q, M, C, R, S] # Weight stationary
+
+  - !Component # DAC supplies analog weight values
+    name: input_dac
+    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+    subclass: dac_ohas
+    attributes: {width: ENCODED_INPUT_BITS}
+
+  - !Component # modulating input with on-silicon MRR
+    name: input_mrr
+    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+    subclass: ohas_mrr
+    attributes: {width: ENCODED_INPUT_BITS, n_instances: N_COLUMNS}
+
+  - !Component # Output buffer stores outputs
+    name: output_regs
+    <<<: [*component_defaults, *keep_outputs]
+    subclass: ohas_sram
+    constraints: 
+      dataspace: {keep_only: [Outputs]}
+      temporal: {factors_only: []}
+    attributes:
+      depth: 1
+      datawidth: 1
+      width: ENCODED_OUTPUT_BITS * N_ROWS
+
+  - !Component
+    name: digital_adder
+    <<<: [*component_defaults, *keep_outputs, *temporal_reuse]
+    subclass: dummy_storage
+    attributes:
+      depth: INF
+      width: ENCODED_OUTPUT_BITS * N_ROWS
+      n_instances: N_ROWS
+
+  - !Component # Photodiode converts output light to analog current
+    name: photodiode_output_readout
+    <<<: [*component_defaults, *keep_outputs, *no_coalesce]
+    subclass: ohas_photodiode
+    attributes:
+      depth: 1
+      width: ENCODED_OUTPUT_BITS * N_ROWS
+
+  - !Component # ADC
+    name: adc
+    <<<: [*component_defaults, *keep_outputs, *no_coalesce]
+    subclass: adc
+    attributes: {<<<: *cim_component_attributes}
+
+  - !ArrayContainer # Each row receives a different input. Rows share outputs.
+    name: row
+    <<<: [*container_defaults, *spatial_must_reuse_inputs]
+    spatial: {meshY: N_ROWS}
+    constraints: {spatial: {maximize_dims: [Y, M]}}
+    max_utilization: {spatial: {factors: [('M=' + str(row.get_fanout()))]}}
+  
+  # O-HAS has no accumulator, thus no need for a digital adder
+  # - !Component
+  #   name: delay_line
+  #   # Set our storage with default values, have it keep outputs, and let it temporally reuse.
+  #   <<<: [*component_defaults, *keep_outputs, *temporal_reuse]
+  #   # Dummy_storage components have zero area and energy. In this tutorial, we're not
+  #   # worried about calculating the energy or area of this component.
+  #   subclass: ohas_delay_line
+  #   # We also set the depth to infinite. Generally, the depth would be limited by the
+  #   # capacity of the component, but we're not concerned with that in this tutorial.
+  #   attributes: {width: ENCODED_OUTPUT_BITS, depth: 4, n_instances: 6} # Infinite storage
+
+  - !ArrayContainer # Each column stores a different weight slice. Columns share inputs.
+    name: column
+    <<<: [*container_defaults, *spatial_must_reuse_outputs]
+    spatial: {meshX: N_COLUMNS}
+    constraints:
+      spatial:
+        maximize_dims: [R, S, C]
+        # no_iteration_over_dataspaces: [Weights]
+    max_utilization: {spatial: {factors: [('R=' + str(column.get_fanout()))]}}
+
+  - !Component # DAC supplies analog weight values
+    name: weight_dac
+    <<<: [*component_defaults, *keep_weights, *no_coalesce]
+    subclass: dac_ohas
+    attributes: {width: ENCODED_WEIGHT_BITS}
+
+  - !Component # A MRR in each row/column crossing grabs one wavelength of input/weight multiplied light to send to an output
+    name: MRR
+    subclass: ohas_mrr
+    <<<: [*component_defaults, *keep_inputs, *keep_weights, *no_temporal_reuse]
+    attributes: {n_instances: 1}
+
+  # - !Component # Put laser down here -> power is proportional to the number of endpoints
+  #   name: laser
+  #   <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+  #   subclass: ohas_laser
+  #   attributes:
+  #     width: ENCODED_INPUT_BITS
+      # power_gated_at: "global_buffer" # Laser is on or off for the whole chip
+
+  - !Hierarchical           # Virtualize an XxYxZ-bit MAC as multiple MAC units.
+    nodes: *virtualized_mac # Defined in include/defines.yaml.

@@ -1,0 +1,189 @@
+{{include_text('defines.yaml')}}
+mapper:
+  diagnostics: True
+architecture:   
+  # ======================= Top level is !Hierarchical =======================
+  nodes:
+  - !Container # Top-level system
+    name: chip
+    <<<: [*container_defaults]
+    attributes: {has_power_gating: True, technology: TECHNOLOGY}
+  
+  - !Component # DRAM main memory
+    name: glb
+    <<<: [*component_defaults]
+    subclass: DRAM
+    attributes: 
+      width: 2048
+      depth: 1024 * 1024 * 32 * 8 // width # 32MB
+    constraints: 
+      dataspace: {keep_only: [Inputs, Outputs]}
+      temporal:
+        factors: !nomerge [Q=0, M=-1, C=-1, X=1]
+        no_iteration_over_dataspaces: !nomerge []
+        permutation: [N, M, C, Q, P]
+
+  - !Container # Tile
+    name: shared_router_group
+    <<<: [*container_defaults, *spatial_map_all_weights]
+    attributes: {has_power_gating: True}
+    spatial: {meshX: N_ROUTER_GROUPS}
+
+  - !Component # Router: Sends data to other tiles
+    name: router
+    # No passthrough here because we assume multiple writes can be staged
+    # before sending
+    <<<: [*component_defaults, *keep_inputs, *keep_outputs, *no_temporal_reuse]
+    subclass: isaac_router_shared_by_four
+    attributes: {depth: INF, width: 128}
+
+  - !Container # Tile top-level
+    name: tile
+    <<<: [*container_defaults]
+    attributes:
+      has_power_gating: True
+      technology: TECHNOLOGY
+      spatial: {meshX: N_TILES}
+
+  # - !Component # eDRAM buffer serves a set of tiles
+  #   name: global_buffer
+  #   <<<: [*component_defaults]
+  #   subclass: SRAM
+  #   attributes:
+  #     depth: 1024
+  #     width: 1024
+  #     datawidth: 1
+  #   constraints: 
+  #     dataspace: {keep_only: [Inputs, Outputs]}
+  #     temporal:
+  #       factors_only: [M=-1, C=-1, P=-1, Q=-1, N=-1, R=-1, S=-1]
+  #       permutation: [N, P, Q, M, C, R, S] # Weight stationary
+
+  # - !Component
+  #   name: digital_adder
+  #   <<<: [*component_defaults, *keep_outputs, *temporal_reuse]
+  #   subclass: dummy_storage
+  #   attributes:
+  #     depth: INF
+  #     width: ENCODED_OUTPUT_BITS * N_COLUMNS
+
+  - !Component # Input buffer
+    name: input_buffer
+    <<<: [*component_defaults]
+    subclass: light_hpna_sram
+    attributes:
+      n_macros: N_PES # number of PEs in the tile
+      width: N_PES * ENCODED_INPUT_BITS
+      depth: ENCODED_INPUT_BITS * n_macros * N_COLUMNS * N_ROWS // width
+    constraints: {dataspace: {keep_only: [Inputs]}, temporal: {factors_only: []}}
+    enabled: True
+
+  - !Component # Output buffer
+    name: output_buffer
+    <<<: [*component_defaults]
+    subclass: light_hpna_sram
+    attributes:
+      n_macros: N_PES # number of PEs in the tile
+      width: N_PES * ENCODED_OUTPUT_BITS
+      depth: ENCODED_OUTPUT_BITS * n_macros * N_COLUMNS // width
+    constraints: {dataspace: {keep_only: [Outputs]}, temporal: {factors_only: []}}
+    enabled: True
+
+  - !Component # Weight buffer
+    name: weight_buffer
+    <<<: [*component_defaults]
+    subclass: light_hpna_sram
+    attributes:
+      n_macros: N_PES # number of PEs in the tile
+      width: N_PES * ENCODED_WEIGHT_BITS
+      depth: ENCODED_WEIGHT_BITS * n_macros * N_COLUMNS * N_ROWS // width
+    constraints: {dataspace: {keep_only: [Weights]}, temporal: {factors_only: []}}
+    enabled: True
+
+  - !Container # Macro
+    name: photonic_pe # long name so it doesn't conflict with other names
+    <<<: [*container_defaults]
+    attributes: {has_power_gating: True}
+    spatial: {meshX: N_PES}
+    # max_utilization: {spatial: {factors: [('N=' + str(photonic_pe.get_fanout()))]}}
+
+  - !Component
+    name: input_mrr_wdm
+    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+    subclass: light_hpna_mrr
+    attributes: {width: ENCODED_INPUT_BITS, n_instances: N_COLUMNS}
+
+  - !ArrayContainer # Each row receives a different input. Rows share outputs.
+    name: row
+    <<<: [*container_defaults, *spatial_must_reuse_inputs]
+    spatial: {meshY: N_ROWS}
+    constraints: {spatial: {maximize_dims: [Y, M]}}
+    max_utilization: {spatial: {factors: [('M=' + str(row.get_fanout()))]}}
+
+  - !Component # modulating input with on-silicon MRR
+    name: input_mrr
+    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+    subclass: light_hpna_mrr
+    attributes: {width: ENCODED_INPUT_BITS, n_instances: N_COLUMNS}
+  
+  - !Component # Photodiode converts output light to analog current
+    name: photodiode_output_readout
+    <<<: [*component_defaults, *keep_outputs, *no_coalesce]
+    subclass: light_hpna_photodiode
+    attributes:
+      depth: 1
+      width: ENCODED_OUTPUT_BITS * N_COLUMNS
+
+  - !Component # ADC
+    name: output_adc
+    <<<: [*component_defaults, *keep_outputs, *no_coalesce]
+    subclass: adc_light_hpna
+    attributes:
+      depth: 1
+      width: ENCODED_OUTPUT_BITS * N_COLUMNS
+      <<<: *cim_component_attributes
+
+  # - !Component
+  #   name: delay_line
+  #   # Set our storage with default values, have it keep outputs, and let it temporally reuse.
+  #   <<<: [*component_defaults, *keep_outputs, *temporal_reuse]
+  #   # Dummy_storage components have zero area and energy. In this tutorial, we're not
+  #   # worried about calculating the energy or area of this component.
+  #   subclass: light_hpna_delay_line
+  #   # We also set the depth to infinite. Generally, the depth would be limited by the
+  #   # capacity of the component, but we're not concerned with that in this tutorial.
+  #   attributes: {width: ENCODED_OUTPUT_BITS * N_COLUMNS, depth: 4, n_instances: 6} # Infinite storage
+  #   constraints: {temporal: {maximize_dims: [[C], [R, S]], maximize_dims_capacity: 4}}
+
+  - !ArrayContainer # Each column stores a different weight slice. Columns share inputs.
+    name: column
+    <<<: [*container_defaults, *spatial_must_reuse_outputs]
+    spatial: {meshX: N_COLUMNS}
+    constraints:
+      spatial:
+        maximize_dims: [[R, S], [C]]
+        # no_iteration_over_dataspaces: [Weights]
+    max_utilization: {spatial: {factors: [('R=' + str(column.get_fanout()))]}}
+
+  - !Component # DAC supplies analog weight values
+    name: weight_dac
+    <<<: [*component_defaults, *keep_weights, *no_coalesce]
+    subclass: dac_light_hpna
+    attributes: {width: ENCODED_WEIGHT_BITS}
+
+  - !Component # A MRR in each row/column crossing grabs one wavelength of input/weight multiplied light to send to an output
+    name: MRR
+    subclass: light_hpna_mrr
+    <<<: [*component_defaults, *keep_inputs, *keep_weights, *no_temporal_reuse]
+    attributes: {n_instances: 1}
+
+  # - !Component # Put laser down here -> power is proportional to the number of endpoints
+  #   name: laser
+  #   <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+  #   subclass: light_hpna_laser
+  #   attributes:
+  #     width: ENCODED_INPUT_BITS
+      # power_gated_at: "global_buffer" # Laser is on or off for the whole chip
+
+  - !Hierarchical           # Virtualize an XxYxZ-bit MAC as multiple MAC units.
+    nodes: *virtualized_mac # Defined in include/defines.yaml.

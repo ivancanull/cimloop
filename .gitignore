@@ -21,3 +21,8 @@ workspace/.jupyter
 workspace/.local
 workspace/.local
 *-checkpoint*
+*.csv
+
+*.png
+*.pdf
+*.out

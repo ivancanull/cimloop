@@ -1,0 +1,4 @@
+globals_ohas:
+  version: 0.4
+  environment_variables:
+    ACCELERGY_COMPONENT_LIBRARIES_OHAS: "{{find_path('ohas_components')}}"

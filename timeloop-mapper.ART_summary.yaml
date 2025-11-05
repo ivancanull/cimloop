@@ -1,0 +1,68 @@
+ART_summary:
+    version: '0.4'
+    table_summary:
+      - name: system_top_level.main_memory[1..1]
+        area: 0.0
+        primitive_estimations: CactiDRAM
+      - name: system_top_level.glb[1..1]
+        area: 79744.0
+        primitive_estimations: Library
+      - name: system_top_level.router[1..8]
+        area: 2437.5
+        primitive_estimations: Library
+      - name: system_top_level.input_buffer[1..128]
+        area: 311.5
+        primitive_estimations: Library
+      - name: system_top_level.output_buffer[1..128]
+        area: 311.5
+        primitive_estimations: Library
+      - name: system_top_level.weight_cache[1..128]
+        area: 623.0
+        primitive_estimations: Library
+      - name: system_top_level.input_dac[1..1024]
+        area: 19584.0
+        primitive_estimations: Library
+      - name: system_top_level.input_mrr[1..1024]
+        area: 19584.0
+        primitive_estimations: Library
+      - name: system_top_level.shift_add[1..131072]
+        area: 25.0
+        primitive_estimations: Library
+      - name: system_top_level.photodiode_output_readout[1..131072]
+        area: 14.0625
+        primitive_estimations: Library
+      - name: system_top_level.weight_dac[1..16777216]
+        area: 153.0
+        primitive_estimations: Library
+      - name: system_top_level.microdisk[1..16777216]
+        area: 25.0
+        primitive_estimations: Library
+      - name: system_top_level.inter_shared_router_group_spatial[1..1]
+        area: 0
+        primitive_estimations: []
+      - name: system_top_level.inter_tile_spatial[1..8]
+        area: 0
+        primitive_estimations: []
+      - name: system_top_level.inter_mvm_spatial[1..128]
+        area: 0
+        primitive_estimations: []
+      - name: system_top_level.inter_row_spatial[1..1024]
+        area: 0
+        primitive_estimations: []
+      - name: system_top_level.adc[1..131072]
+        area: 708866.0
+        primitive_estimations:
+          - name: adc
+            estimator: ADC Plug-In
+      - name: system_top_level.inter_column_spatial[1..131072]
+        area: 0
+        primitive_estimations: []
+      - name: system_top_level.inter_1bit_x_1bit_mac_spatial[1..16777216]
+        area: 0
+        primitive_estimations: []
+      - name: system_top_level.here_to_fix_a_bug[1..134217728]
+        area: 0
+        primitive_estimations: []
+      - name: system_top_level.virtual_bitwise_mac[1..134217728]
+        area: 0
+        primitive_estimations: []

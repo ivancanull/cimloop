@@ -64,6 +64,16 @@ helpful_macros_ignore:
       - [N]    # Different inputs in a batch
       split: 999
 
+- &spatial_map_all_weights_instead_of_y
+  constraints:
+    spatial:
+      maximize_dims:
+      - [R, S] # Different values in the same filter
+      - [M, C] # Different filters
+      - [G]    # Different groups
+      - [P, Q] # Done mapping weights, let's parallelize output values
+      - [N]    # Different inputs in a batch
+      split: 999
 # =============================================================================
 # The following macros are used in CiM component attributes. They are
 # put under an `ignore` top-key so the front-end doesn't complain about

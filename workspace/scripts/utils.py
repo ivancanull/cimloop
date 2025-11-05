@@ -27,7 +27,7 @@ def single_test(result) -> MacroOutputStatsList:
 
 
 def parallel_test(
-    delayed_calls: List[Callable], n_jobs: int = 32
+    delayed_calls: List[Callable], n_jobs: int = 128
 ) -> MacroOutputStatsList:
     if not isinstance(delayed_calls, Iterable):
         delayed_calls = [delayed_calls]
@@ -134,12 +134,14 @@ def quick_run(
     macro: str,
     variables: dict = None,
     accelergy_verbose: bool = False,
+    max_utilization: bool = True,
+    system: str = "ws_dummy_buffer_one_macro",
     **kwargs,
 ):
     spec = get_spec(
         macro=macro,
-        system="ws_dummy_buffer_one_macro",
-        max_utilization=True,
+        system=system,
+        max_utilization=max_utilization,
         **kwargs,
     )
     variables = variables or {}
